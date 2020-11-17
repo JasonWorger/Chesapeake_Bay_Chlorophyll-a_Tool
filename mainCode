@@ -8,6 +8,8 @@ var remoteSensingReflectanceVis = {
  palette: ['1207DD', '#065FCD','#269138','#5CDE1A','#FF3312']
  // very low, low , medium,high , very high
 };
+
+
 Map.setCenter( -76.405174,38.654676, 7);
 Map.style().set('cursor', 'crosshair');
 //Adding Prompt to click for values
@@ -16,6 +18,8 @@ Map.add(inspector);
 Map.addLayer(
  remoteSensingReflectance, remoteSensingReflectanceVis,
  'Chlorophyll');
+
+
 Map.addLayer(remoteSensingReflectance.mean(),
 remoteSensingReflectanceVis,'Mean Chlorophyll');
 Map.onClick(function(coords) {
@@ -24,6 +28,8 @@ Map.onClick(function(coords) {
  value: 'Loading...',
  style: {color: 'gray'}
  }));
+
+
  // Determine the mean NDVI, a long-running server operation.
  var point = ee.Geometry.Point(coords.lon, coords.lat);
  var meanNdvi = remoteSensingReflectance.reduce('mean');
@@ -37,6 +43,8 @@ Map.onClick(function(coords) {
  }));
  });
 });
+
+
 //Adding Legend
 var legend = ui.Panel({
  style:{
@@ -55,6 +63,8 @@ var legendTitle = ui.Label({
  }
 })
 legend.add(legendTitle);
+
+
 //Create and styles 1 row of legend
 var makeRow = function(color,name){
  // Create the label that is actually the coloured box
@@ -75,6 +85,8 @@ return ui.Panel({
  layout : ui.Panel.Layout.Flow('horizontal')
 });
 };
+
+
 //1207DD', '6100CD','B300B8','A00051','870002
 legend.add(makeRow('#1207DD','Very Low'));
 legend.add(makeRow('#065FCD','Low'));
