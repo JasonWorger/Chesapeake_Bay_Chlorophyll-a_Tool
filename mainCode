@@ -1,0 +1,84 @@
+var dataset = ee.ImageCollection('NASA/OCEANDATA/MODIS-Aqua/L3SMI')
+ .filterDate('2017-04-01', '2017-04-30');
+var remoteSensingReflectance =
+ dataset.select(['chlor_a']);
+var remoteSensingReflectanceVis = {
+ min: 0.0,
+ max: 99.99,
+ palette: ['1207DD', '#065FCD','#269138','#5CDE1A','#FF3312']
+ // very low, low , medium,high , very high
+};
+Map.setCenter( -76.405174,38.654676, 7);
+Map.style().set('cursor', 'crosshair');
+//Adding Prompt to click for values
+var inspector = ui.Panel([ui.Label('Click to get Chlorophyll')]);
+Map.add(inspector);
+Map.addLayer(
+ remoteSensingReflectance, remoteSensingReflectanceVis,
+ 'Chlorophyll');
+Map.addLayer(remoteSensingReflectance.mean(),
+remoteSensingReflectanceVis,'Mean Chlorophyll');
+Map.onClick(function(coords) {
+ // Show the loading label.
+ inspector.widgets().set(0, ui.Label({
+ value: 'Loading...',
+ style: {color: 'gray'}
+ }));
+ // Determine the mean NDVI, a long-running server operation.
+ var point = ee.Geometry.Point(coords.lon, coords.lat);
+ var meanNdvi = remoteSensingReflectance.reduce('mean');
+ var sample = meanNdvi.sample(point, 30);
+ var computedValue = sample.first().get('NDVI_mean');
+ // Request the value from the server.
+ computedValue.evaluate(function(result) {
+ // When the server returns the value, show it.
+ inspector.widgets().set(0, ui.Label({
+ value: 'Mean NDVI: ' + result.toFixed(2),
+ }));
+ });
+});
+//Adding Legend
+var legend = ui.Panel({
+ style:{
+ position: 'bottom-left',
+ padding : '8px 15px'
+34
+ }
+});
+var legendTitle = ui.Label({
+ value: 'Chlorophyll-a Concentration',
+ style:{
+ fontWeight:'bold',
+ fontSize: '18px',
+ margin: '0 0 4px 0',
+ padding: '0'
+ }
+})
+legend.add(legendTitle);
+//Create and styles 1 row of legend
+var makeRow = function(color,name){
+ // Create the label that is actually the coloured box
+ var colorBox = ui.Label({
+ style:{
+ backgroundColor:color,
+ //Use padding to give Box height and width
+ padding: '8px',
+ margin : '0 0 4px 0'
+ }
+ });
+ var description = ui.Label({
+ value: name,
+ style:{margin: '0 0 4px 6px'}
+ });
+return ui.Panel({
+ widgets: [colorBox,description],
+ layout : ui.Panel.Layout.Flow('horizontal')
+});
+};
+//1207DD', '6100CD','B300B8','A00051','870002
+legend.add(makeRow('#1207DD','Very Low'));
+legend.add(makeRow('#065FCD','Low'));
+legend.add(makeRow('#269138','Medium'));
+legend.add(makeRow('#5CDE1A','High'));
+legend.add(makeRow('#FF3312','Very High'));
+Map.add(legend);
